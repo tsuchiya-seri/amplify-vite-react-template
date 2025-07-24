@@ -1,13 +1,35 @@
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from "aws-amplify/data";
+import { uploadData } from "aws-amplify/storage";
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
+
 
 const client = generateClient<Schema>();
 
 function App() {
   const { signOut } = useAuthenticator();
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [file, setFile] = useState<File | undefined>();
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setFile(files[0]);
+    }
+  };
+
+  const handleUpload = () => {
+    if (file) { // file が undefined でないことを確認
+      uploadData({
+        path: `picture-submissions/${file.name}`,
+        data: file,
+      })
+      alert(`${file.name}がアップロードされました。`)
+  } else{
+    alert(`ファイルが選択されていません。`)
+  }; 
+};
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
@@ -36,6 +58,11 @@ function App() {
           </li>
         ))}
       </ul>
+      <input type="file" onChange={handleChange} />
+        <button
+          onClick={handleUpload}>
+        Upload
+        </button>
       <div>
         🥳 App successfully hosted. Try creating a new todo.
         <br />
